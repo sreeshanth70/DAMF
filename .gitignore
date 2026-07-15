@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pt
+*.png
+sota_data_cache.csv
+*_cache.csv
+.ipynb_checkpoints/
