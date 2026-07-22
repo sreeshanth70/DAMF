@@ -25,6 +25,12 @@ Changes vs. patchtst_macro.py:
      and simple trading-utility metrics (Sharpe/drawdown/turnover on
      non-overlapping windows) added after the main horizon loop (reviewer
      R2-4, R2-6).
+  7. ADAPT-ONCE Phase-3 policy (previously this script re-adapted the head
+     every active crash day; it now adapts once per episode and freezes,
+     matching patchtst_walkforward.py and the policy that actually produced
+     every headline number in the paper, Tables 4-7). The daily-readapt
+     variant was an earlier policy whose seed-level results do not
+     reconcile with the paper's reported values for the same nominal seed.
 
 Adds 4 macro features to the existing 8 price/vol features:
   9.  yield_slope     — 10y-2y Treasury spread (level)  [FRED: T10Y2Y]
@@ -464,6 +470,14 @@ for H in HORIZONS:
             bias_opt = torch.optim.Adam([bias_head.bias], lr=TTA_LR)
 
             prev_regime = -1
+            episode_adapted = False
+            # ADAPT-ONCE (matches patchtst_walkforward.py / the policy that
+            # produced the paper's reported numbers, Tables 4-7): only run
+            # the gradient-adaptation steps once per crash episode, at the
+            # first day the buffer is large enough -- not every active day.
+            # This script previously re-adapted daily, a different (older)
+            # policy whose seeds do not reconcile with the paper's reported
+            # values for the same nominal seed.
             for i in range(len(Xte)):
                 # LEAK FIX (R2-1): release window (i-H)'s label only once
                 # H trading days have actually elapsed.
@@ -475,6 +489,7 @@ for H in HORIZONS:
 
                 cur_regime = int(rte[i])
                 active = (cur_regime == 3)
+                entering_episode = active and cur_regime != prev_regime
 
                 if cur_regime != prev_regime and prev_regime != -1:
                     model.head.load_state_dict(orig_head_state)
@@ -482,7 +497,10 @@ for H in HORIZONS:
                     bias_head.load_state_dict(orig_head_state)
                     bias_opt = torch.optim.Adam([bias_head.bias], lr=TTA_LR)
 
-                if active and len(crash_buf_X) >= TTA_MIN_SUPPORT:
+                if entering_episode:
+                    episode_adapted = False
+
+                if active and not episode_adapted and len(crash_buf_X) >= TTA_MIN_SUPPORT:
                     bX = torch.tensor(np.array(crash_buf_X), dtype=torch.float32).to(DEVICE)
                     by = torch.tensor(np.array(crash_buf_y), dtype=torch.float32).to(DEVICE)
 
@@ -502,6 +520,9 @@ for H in HORIZONS:
                         F.l1_loss(bias_head(rep_b).squeeze(-1), by).backward()
                         bias_opt.step()
 
+                    episode_adapted = True
+
+                if active:
                     xi = torch.tensor(Xte[i:i+1], dtype=torch.float32).to(DEVICE)
                     with torch.no_grad():
                         rep_i = model.get_rep(xi)
