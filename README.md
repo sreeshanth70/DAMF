@@ -19,6 +19,7 @@ files needed to reproduce the reported numbers.
 | `results/predictions_adaptonce_F5_Original_H*d.csv` | Table 7 | Per-day predictions (baseline vs. adapt-once TTA) on the primary 2018–2023 test window, at each horizon. Source data for the trading-utility metrics. |
 | `results/walkforward_fold_results_adaptonce.json` | Table 6 | Raw per-fold crash-DA results from the walk-forward validation. |
 | `data_pipeline.py` | — | Consolidated data loading, feature construction, and regime-label generation, factored out of the ~80-line block previously duplicated across the four scripts above. `load_dataset()` and `assign_regimes()` are the entry points; the latter is what the Section 7.5 threshold-sensitivity check calls to re-label already-fetched data under different drawdown/momentum thresholds. |
+| `baseline_reconcile.py` | Table 3 note | Independently retrains the PatchTST backbone under the SOTA-comparison protocol (same seed formula) and computes crash-regime DA, to directly check it against Table 4/5's "Phase 1 only" crash DA rather than just asserting seed consistency. Result saved in `results/baseline_reconcile_results.json`. |
 | `splits.json` | — | Exact date-range and window-count boundaries for the primary train/val/test split (per horizon) and for all five walk-forward folds, as inspectable artifacts rather than only hardcoded constants. |
 | `config.json` | — | Every architecture hyperparameter, training setting, TTA policy setting, regime-detection threshold, and per-horizon seed in one file. |
 
