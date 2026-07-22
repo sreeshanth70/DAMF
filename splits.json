@@ -1,0 +1,34 @@
+{
+  "primary_split": {
+    "description": "Main train/validation/test split used for Tables 1-3, 5, 7 and the F5_Original walk-forward fold.",
+    "train": {"start": "2000-01-01", "end": "2015-12-31", "days": 3712},
+    "validation": {"start": "2016-01-01", "end": "2017-12-31", "days": 503},
+    "test": {"start": "2018-01-01", "end": "2023-12-31", "days": 1509},
+    "raw_days_before_warmup": 6037,
+    "days_after_warmup": 5724,
+    "warmup_days": 313,
+    "warmup_note": "Dropped by rolling-window feature construction (252-day drawdown, 63-day momentum/credit-spread windows) before any split occurs.",
+    "per_horizon_windows": {
+      "note": "Each horizon additionally consumes L=42 lookback days plus H forward-label days, so usable window counts fall below the day counts above and vary by horizon.",
+      "H1d":  {"train": 3670, "val": 461, "test": 1467},
+      "H5d":  {"train": 3666, "val": 457, "test": 1463},
+      "H10d": {"train": 3661, "val": 452, "test": 1458},
+      "H21d": {"train": 3650, "val": 441, "test": 1447}
+    }
+  },
+  "walk_forward_folds": {
+    "description": "Section 7.5 walk-forward validation folds. Each fold trains Phase 1/2 from scratch on data through train_end; test_end is the fold's evaluation window. F2/F3 are excluded from significance testing (F2: zero crash-regime days; F3: only 6 crash-regime days).",
+    "folds": [
+      {"label": "F1_GFC",      "train_end": "2006-12-31", "val_end": "2007-12-31", "test_end": "2010-12-31", "era": "Global Financial Crisis"},
+      {"label": "F2_EuroDebt", "train_end": "2010-12-31", "val_end": "2011-12-31", "test_end": "2014-12-31", "era": "Calm bull market (no qualifying crash)"},
+      {"label": "F3_Q4-2018",  "train_end": "2014-12-31", "val_end": "2015-12-31", "test_end": "2018-12-31", "era": "Q4 2018 correction"},
+      {"label": "F4_COVID",    "train_end": "2017-12-31", "val_end": "2018-12-31", "test_end": "2021-12-31", "era": "COVID crash"},
+      {"label": "F5_Original", "train_end": "2015-12-31", "val_end": "2017-12-31", "test_end": "2023-12-31", "era": "Primary test window used throughout the paper"}
+    ]
+  },
+  "per_horizon_seeds": {
+    "formula": "seed = 42 + 100 * H",
+    "H1d": 142, "H5d": 542, "H10d": 1042, "H21d": 2142,
+    "note": "Same formula used in patchtst_macro_leakfix.py, patchtst_walkforward.py, and sota_baselines.py for every model, including the PatchTST backbone baseline row in the SOTA-comparison table."
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "architecture": {
+    "model": "PatchTST",
+    "lookback_L": 42,
+    "patch_len": 16,
+    "patch_stride": 8,
+    "d_model": 128,
+    "n_heads": 8,
+    "n_layers": 3,
+    "ffn_dim": 256,
+    "dropout": 0.1,
+    "n_features": 12
+  },
+  "phase1_backbone_training": {
+    "loss": "MAE",
+    "optimizer": "Adam",
+    "lr": 1e-3,
+    "lr_schedule": "cosine annealing to 1e-5",
+    "batch_size": 32,
+    "max_epochs": 500,
+    "early_stop_patience": 30,
+    "min_epochs": 150,
+    "min_epochs_note": "Introduced in Section 6.1 to prevent early stopping on the quiet 2016-2017 validation period before the model sees sufficient crash gradient steps. Section 5.2's diagnostic meta-learning comparison predates this fix and used no minimum-epoch floor."
+  },
+  "phase2_anil": {
+    "inner_lr": 1e-2,
+    "outer_lr": 5e-5
+  },
+  "phase3_tta": {
+    "buffer_size": 20,
+    "lr": 5e-3,
+    "gating": "regime-gated, crash-only, adapt-once per episode",
+    "policy_note": "Adapts once per crash episode using the rolling buffer of the last 20 crash-regime windows, then freezes until the regime changes. Boom-regime adaptation was tested but does not survive leak-corrected, cross-validated evaluation (Section 7.5) and is unused in the final policy."
+  },
+  "regime_detection": {
+    "drawdown_threshold": -0.10,
+    "momentum_threshold": 0.02,
+    "drawdown_windows_days": [252, 63],
+    "momentum_window_days": 63,
+    "sensitivity_analysis": "Section 7.5 re-evaluates the primary result across a 4x3 grid (drawdown -8% to -15%, momentum 0% to 4%); the crash-DA gain remains positive (+6.8pp to +18.2pp) throughout."
+  },
+  "per_horizon_seeds": {
+    "formula": "seed = 42 + 100 * H",
+    "H1d": 142, "H5d": 542, "H10d": 1042, "H21d": 2142
+  },
+  "baselines": {
+    "DLinear": {"params": 98},
+    "iTransformer": {"params": 602000, "lr": 1e-4},
+    "N-HiTS": {"params": 800000},
+    "TimeMixer": {"params": 207000, "lr": 1e-4},
+    "lr_note": "1e-3 for PatchTST/DLinear/N-HiTS, 1e-4 for iTransformer/TimeMixer (higher LR caused premature convergence for these two)."
+  },
+  "determinism": {
+    "cudnn_deterministic": true,
+    "cudnn_benchmark": false,
+    "dataloader_generator": "fixed per-seed torch.Generator"
+  }
+}

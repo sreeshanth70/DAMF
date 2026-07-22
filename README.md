@@ -18,6 +18,9 @@ files needed to reproduce the reported numbers.
 | `sota_baselines.py` | Table 3 | Baseline reimplementations (DLinear, iTransformer, N-HiTS, TimeMixer) under the identical protocol, feature set, and per-horizon seeds as the main model. |
 | `results/predictions_adaptonce_F5_Original_H*d.csv` | Table 7 | Per-day predictions (baseline vs. adapt-once TTA) on the primary 2018–2023 test window, at each horizon. Source data for the trading-utility metrics. |
 | `results/walkforward_fold_results_adaptonce.json` | Table 6 | Raw per-fold crash-DA results from the walk-forward validation. |
+| `data_pipeline.py` | — | Consolidated data loading, feature construction, and regime-label generation, factored out of the ~80-line block previously duplicated across the four scripts above. `load_dataset()` and `assign_regimes()` are the entry points; the latter is what the Section 7.5 threshold-sensitivity check calls to re-label already-fetched data under different drawdown/momentum thresholds. |
+| `splits.json` | — | Exact date-range and window-count boundaries for the primary train/val/test split (per horizon) and for all five walk-forward folds, as inspectable artifacts rather than only hardcoded constants. |
+| `config.json` | — | Every architecture hyperparameter, training setting, TTA policy setting, regime-detection threshold, and per-horizon seed in one file. |
 
 ## The central finding
 
@@ -50,6 +53,12 @@ python patchtst_walkforward.py
 # Seed-sensitivity check referenced in the Limitations section
 python patchtst_multiseed.py
 ```
+
+The Section 7.5 bootstrap CI (day-level, 5,000 resamples on the primary F5 window)
+and the regime-threshold sensitivity grid (drawdown -8% to -15%, momentum 0-4%) are
+both computed directly from the saved `results/predictions_adaptonce_F5_Original_H*.csv`
+files with no retraining required — `assign_regimes()` in `data_pipeline.py` re-labels
+the crash regime under alternate thresholds for the latter.
 
 Data (S&P 500 prices, VIX, Treasury yields, credit spreads) is fetched live from Yahoo Finance
 (`yfinance`) and FRED (`pandas_datareader`) on first run and cached locally; no raw price data is
