@@ -1,0 +1,20 @@
+{
+  "H": 10,
+  "fold": "F5_Original",
+  "policy": "adapt-once (matches Tables 4-7)",
+  "base_crash_per_seed": [
+    0.376865671641791
+  ],
+  "base_crash_mean": 0.376865671641791,
+  "base_crash_std": 0.0,
+  "full_crash_per_seed": [
+    0.5261194029850746
+  ],
+  "full_crash_mean": 0.5261194029850746,
+  "full_crash_std": 0.0,
+  "delta_per_seed": [
+    0.14925373134328362
+  ],
+  "delta_mean": 0.14925373134328362,
+  "delta_std": 0.0
+}
